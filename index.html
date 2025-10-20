@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ms-MY">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kemahiran Turutan: Susun Mengikut Turutan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body{box-sizing:border-box}
+    .draggable{cursor:grab;transition:transform .2s}
+    .draggable:active{cursor:grabbing;transform:scale(1.05)}
+    .drop-zone{min-height:80px;border:2px dashed #cbd5e1;transition:all .3s}
+    .drop-zone.drag-over{border-color:#3b82f6;background:#eff6ff}
+    .selected{transform:scale(1.06);box-shadow:0 0 20px rgba(59,130,246,.45)}
+    /* Info bar pop */
+    .info-pop{animation:infoPop .45s ease}
+    @keyframes infoPop{from{transform:translateY(-6px);opacity:.3}to{transform:none;opacity:1}}
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen p-4">
+  <!-- Info Bar -->
+  <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-6 rounded-lg shadow-md info-pop" id="infoBar">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center">
+        <span class="text-2xl mr-3">📚</span>
+        <div>
+          <h2 class="text-xl font-bold text-gray-800">Kemahiran Turutan</h2>
+          <p id="info-text" class="text-lg text-gray-700">Klik atau seret elemen. Tekan 🔊 untuk dengar.</p>
+        </div>
+      </div>
+      <button id="speak-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-2xl transition-colors" title="Baca mesej">
+        🔊
+      </button>
+    </div>
+  </div>
+
+  <!-- Activity Card -->
+  <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+    <div id="activity-content" class="min-h-96">
+      <!-- Dynamic content -->
+    </div>
+  </div>
+
+  <!-- Activity Selection -->
+  <div class="bg-white rounded-xl shadow-lg p-6">
+    <h3 class="text-xl font-bold mb-4 text-gray-800">Pilih Aktiviti:</h3>
+    <div class="flex flex-wrap gap-3 mb-4">
+      <button onclick="loadActivity(1)" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg text-lg font-semibold transition-colors">1️⃣ Susun Saiz</button>
+      <button onclick="loadActivity(2)" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg text-lg font-semibold transition-colors">2️⃣ Kereta Beratur</button>
+      <button onclick="loadActivity(3)" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg text-lg font-semibold transition-colors">3️⃣ Tangga Nombor</button>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="clearActivity()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg text-lg font-semibold transition-colors">🧹 Bersih</button>
+      <button onclick="nextChallenge()" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg text-lg font-semibold transition-colors">➡️ Seterusnya</button>
+    </div>
+  </div>
+
+  <script>
+    /* ================== TTS helper ================== */
+    let ttsUnlocked = false;
+    function unlockTTS(){
+      if(!ttsUnlocked){
+        try{ speechSynthesis.cancel(); }catch{}
+        const u = new SpeechSynthesisUtterance('');
+        speechSynthesis.speak(u);
+        ttsUnlocked = true;
+      }
+    }
+    function speak(text){
+      unlockTTS();
+      if(!text) return;
+      try{ speechSynthesis.cancel(); }catch{}
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'ms-MY'; u.rate = 0.9; u.pitch = 1.0;
+      const vs = speechSynthesis.getVoices();
+      const ms = vs.find(v=>v.lang?.includes('ms')||v.lang?.includes('MY')) || vs.find(v=>/en/i.test(v.lang));
+      if(ms) u.voice = ms;
+      speechSynthesis.speak(u);
+    }
+    function setInfo(text){
+      const el = document.getElementById('info-text');
+      el.textContent = text;
+      const bar = document.getElementById('infoBar');
+      bar.classList.remove('info-pop'); void bar.offsetWidth; bar.classList.add('info-pop');
+    }
+    document.addEventListener('click', unlockTTS, { once:true });
+    document.getElementById('speak-btn').addEventListener('click', ()=> speak(document.getElementById('info-text').textContent));
+
+    /* ============ Util Drag & Drop (rujukan elemen) ============ */
+    let draggingEl = null;
+    function wireDraggable(el){
+      el.setAttribute('draggable','true');
+      el.addEventListener('dragstart',()=>{ draggingEl = el; });
+      el.addEventListener('dragend',()=>{ draggingEl = null; });
+    }
+    function wireDropZone(zone, onDrop){
+      zone.addEventListener('dragover',e=>{ e.preventDefault(); zone.classList.add('drag-over'); });
+      zone.addEventListener('dragleave',()=> zone.classList.remove('drag-over'));
+      zone.addEventListener('drop',e=>{
+        e.preventDefault(); zone.classList.remove('drag-over');
+        if(draggingEl) onDrop(zone, draggingEl);
+      });
+    }
+
+    /* ================== Aktiviti 1 — Susun Saiz (pembelajaran) ================== */
+    function loadActivity1(){
+      const content = `
+        <h3 class="text-2xl font-bold mb-6 text-center text-gray-800">🔵 Susun Bulatan Dari Kecil ➜ Besar</h3>
+        <p class="text-center text-gray-600 mb-4">Seret mana-mana bulatan ke slot. Info Bar akan <b>membaca turutan semasa</b>.</p>
+        <div class="mb-6">
+          <div class="flex justify-center gap-4 mb-6 flex-wrap" id="pool">
+            <div class="draggable bg-blue-400 rounded-full w-12 h-12 flex items-center justify-center text-white font-bold" data-size="1">1</div>
+            <div class="draggable bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center text-white font-bold" data-size="2">2</div>
+            <div class="draggable bg-blue-500 rounded-full w-20 h-20 flex items-center justify-center text-white font-bold" data-size="3">3</div>
+            <div class="draggable bg-blue-700 rounded-full w-24 h-24 flex items-center justify-center text-white font-bold" data-size="4">4</div>
+          </div>
+        </div>
+        <div class="grid grid-cols-4 gap-4">
+          ${[1,2,3,4].map(i=>`
+            <div class="drop-zone bg-gray-100 rounded-lg p-4 text-center">
+              <p class="text-sm font-semibold text-gray-600">${i===1?'Paling Kecil':i===4?'Paling Besar':i===2?'Kecil':'Besar'}</p>
+              <div class="mt-2 min-h-16 flex items-center justify-center"></div>
+            </div>
+          `).join('')}
+        </div>`;
+      document.getElementById('activity-content').innerHTML = content;
+      setInfo('Seret bulatan. Info Bar akan membaca urutan (kecil → besar).');
+
+      document.querySelectorAll('.draggable').forEach(wireDraggable);
+      document.querySelectorAll('.drop-zone').forEach(zone=>{
+        wireDropZone(zone, (z, el)=>{
+          z.querySelector('div').innerHTML = '';
+          z.querySelector('div').appendChild(el);
+          updateOrderMessage();
+        });
+      });
+      wireDropZone(document.getElementById('pool'), (z, el)=>{
+        z.appendChild(el);
+        updateOrderMessage();
+      });
+
+      function updateOrderMessage(){
+        const sizes = Array.from(document.querySelectorAll('.drop-zone > div > .draggable'))
+          .map(el=>Number(el.dataset.size));
+        if(!sizes.length){ setInfo('Letak bulatan ke slot untuk mula membaca turutan.'); return; }
+        const nama = {1:'paling kecil',2:'kecil',3:'besar',4:'paling besar'};
+        setInfo(`Turutan semasa (kecil → besar): ${sizes.map(s=>nama[s]).join(' → ')}.`);
+      }
+    }
+
+    /* ================== Aktiviti 2 — Kereta Beratur (Pendek ➜ Panjang) ================== */
+    function loadActivity2(){
+      const content = `
+        <h3 class="text-2xl font-bold mb-6 text-center text-gray-800">🚗 Kereta Beratur: Pendek ➜ Panjang</h3>
+        <p class="text-center text-gray-600 mb-4">Seret kereta ke lorong. Info Bar akan <b>membaca turutan panjang kereta</b>.</p>
+
+        <!-- Kolam kereta -->
+        <div id="car-pool" class="flex flex-wrap justify-center gap-3 mb-6">
+          ${[
+            {w:60,  c:'bg-red-500',   t:'sangat pendek', v:1},
+            {w:90,  c:'bg-orange-500',t:'pendek',        v:2},
+            {w:120, c:'bg-yellow-500',t:'sederhana',     v:3},
+            {w:150, c:'bg-green-500', t:'panjang',       v:4},
+            {w:180, c:'bg-blue-500',  t:'sangat panjang',v:5}
+          ].map(k=>`
+            <div class="car draggable ${k.c} text-white rounded-full px-3 py-2 shadow"
+                 style="width:${k.w}px" data-lv="${k.v}" data-label="${k.t}">
+              🚗 <span class="text-xs uppercase">${k.t}</span>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- Lorong beratur -->
+        <div class="bg-sky-50 rounded-xl p-4">
+          <h4 class="text-center font-semibold text-sky-700 mb-3">Lorong (kiri ➜ kanan = pendek ➜ panjang)</h4>
+          <div id="lane" class="grid grid-cols-5 gap-3">
+            ${[1,2,3,4,5].map(()=>`
+              <div class="drop-zone bg-white rounded-lg p-3 min-h-16 flex items-center justify-center">
+                <span class="text-xs text-gray-400">Letak di sini</span>
+              </div>`).join('')}
+          </div>
+          <div class="text-center mt-4">
+            <button onclick="readLane()" class="bg-purple-500 hover:bg-purple-600 text-white px-5 py-2 rounded-lg font-semibold">📖 Baca Turutan</button>
+            <button onclick="resetLane()" class="bg-gray-500 hover:bg-gray-600 text-white px-5 py-2 rounded-lg font-semibold ml-2">🔄 Set Semula</button>
+          </div>
+        </div>`;
+      document.getElementById('activity-content').innerHTML = content;
+      setInfo('Seret kereta ke lorong dari pendek ke panjang. Tekan 📖 atau 🔊 untuk dengar.');
+
+      // wire DnD
+      document.querySelectorAll('#car-pool .draggable').forEach(wireDraggable);
+      document.querySelectorAll('#lane .drop-zone').forEach(zone=>{
+        wireDropZone(zone, (z, el)=>{
+          z.innerHTML = ''; z.appendChild(el); renderLaneMsg();
+        });
+      });
+      wireDropZone(document.getElementById('car-pool'), (z, el)=>{ z.appendChild(el); renderLaneMsg(); });
+
+      function renderLaneMsg(){
+        const labels = Array.from(document.querySelectorAll('#lane .drop-zone .car'))
+          .map(el=>el.dataset.label);
+        if(!labels.length){ setInfo('Susun kereta di lorong. Sistem akan membaca turutan semasa.'); return; }
+        setInfo(`Turutan semasa (pendek → panjang): ${labels.join(' → ')}.`);
+      }
+      window.readLane = function(){
+        const labels = Array.from(document.querySelectorAll('#lane .drop-zone .car')).map(el=>el.dataset.label);
+        if(!labels.length){ setInfo('Belum ada kereta di lorong. Seret sekurang-kurangnya satu.'); return; }
+        const msg = `Turutan panjang kereta: ${labels.join(', ')}.`;
+        setInfo(msg); speak(msg);
+      }
+      window.resetLane = function(){
+        const pool = document.getElementById('car-pool');
+        document.querySelectorAll('#lane .car').forEach(el=> pool.appendChild(el));
+        document.querySelectorAll('#lane .drop-zone').forEach(z=>{ z.innerHTML='<span class="text-xs text-gray-400">Letak di sini</span>'; });
+        setInfo('Set semula lorong. Susun semula kereta.');
+      }
+    }
+
+    /* ================== Aktiviti 3 — Tangga Nombor (Naik/Turun) ================== */
+    function loadActivity3() {
+      const content = `
+        <h3 class="text-2xl font-bold mb-6 text-center text-gray-800">🪜 Tangga Nombor</h3>
+        <p class="text-center text-gray-600 mb-4">Klik anak tangga mengikut turutan. Pilih mod <b>Naik</b> atau <b>Turun</b>. Info Bar akan membaca turutan anda.</p>
+
+        <div class="flex items-center justify-center gap-3 mb-5">
+          <button id="modeUp"   class="px-4 py-2 rounded-lg font-semibold bg-emerald-500 text-white">Naik (1 → 5)</button>
+          <button id="modeDown" class="px-4 py-2 rounded-lg font-semibold bg-gray-200 text-gray-700">Turun (5 → 1)</button>
+        </div>
+
+        <div class="mx-auto max-w-xl">
+          <div class="grid grid-cols-5 gap-3">
+            ${[1,2,3,4,5].map(n => `
+              <button class="step bg-white rounded-xl shadow p-4 h-24 flex flex-col items-center justify-center border-2 border-transparent hover:border-indigo-300"
+                      data-num="${n}" onclick="clickStep(this)">
+                <span class="text-3xl font-extrabold text-indigo-600">${n}</span>
+                <span class="text-xs text-gray-500 mt-1">Klik saya</span>
+              </button>
+            `).join('')}
+          </div>
+
+          <div class="bg-indigo-50 rounded-xl p-4 mt-6">
+            <h4 class="text-center font-semibold text-indigo-700 mb-2">Turutan anda:</h4>
+            <div id="ladder-seq" class="flex flex-wrap justify-center gap-2 text-lg font-bold text-indigo-800"></div>
+            <div class="text-center mt-4">
+              <button onclick="readLadder()" class="bg-purple-500 hover:bg-purple-600 text-white px-5 py-2 rounded-lg font-semibold">📖 Baca Turutan</button>
+              <button onclick="resetLadder()" class="bg-gray-500 hover:bg-gray-600 text-white px-5 py-2 rounded-lg font-semibold ml-2">🔄 Set Semula</button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById('activity-content').innerHTML = content;
+      setInfo('Pilih mod Naik atau Turun, kemudian klik anak tangga mengikut turutan yang dipilih.');
+
+      window.ladderMode = 'up';
+      window.ladderSeq  = [];
+
+      const up   = document.getElementById('modeUp');
+      const down = document.getElementById('modeDown');
+      up.onclick   = ()=> setLadderMode('up');
+      down.onclick = ()=> setLadderMode('down');
+    }
+    function setLadderMode(mode){
+      window.ladderMode = mode;
+      const up   = document.getElementById('modeUp');
+      const down = document.getElementById('modeDown');
+      if(mode==='up'){
+        up.className   = 'px-4 py-2 rounded-lg font-semibold bg-emerald-500 text-white';
+        down.className = 'px-4 py-2 rounded-lg font-semibold bg-gray-200 text-gray-700';
+        setInfo('Mod Naik dipilih (1 ke 5). Klik 1, kemudian 2, 3, 4, 5.');
+      }else{
+        down.className = 'px-4 py-2 rounded-lg font-semibold bg-rose-500 text-white';
+        up.className   = 'px-4 py-2 rounded-lg font-semibold bg-gray-200 text-gray-700';
+        setInfo('Mod Turun dipilih (5 ke 1). Klik 5, kemudian 4, 3, 2, 1.');
+      }
+      resetLadder(true);
+    }
+    function clickStep(btn){
+      const n = Number(btn.dataset.num);
+      if(window.ladderSeq.at(-1) === n) return;
+      window.ladderSeq.push(n);
+      btn.classList.add('border-indigo-500', 'bg-indigo-50');
+      renderLadder();
+    }
+    function renderLadder(){
+      const wrap = document.getElementById('ladder-seq');
+      wrap.innerHTML = window.ladderSeq.map(n =>
+        `<span class="px-3 py-1 rounded-full bg-white shadow border border-indigo-200">${n}</span>`
+      ).join('');
+      const modeText = (window.ladderMode==='up') ? 'naik' : 'turun';
+      if(window.ladderSeq.length){
+        setInfo(`Turutan ${modeText} anda: ${window.ladderSeq.join(' → ')}. Tekan 🔊 untuk dengar.`);
+      }else{
+        setInfo(`Klik anak tangga mengikut turutan ${modeText}.`);
+      }
+    }
+    function readLadder(){
+      if(!window.ladderSeq.length){ setInfo('Belum ada turutan. Klik anak tangga dahulu.'); return; }
+      const modeText = (window.ladderMode==='up') ? 'naik' : 'turun';
+      const msg = `Turutan ${modeText}: ${window.ladderSeq.join(', ')}.`;
+      setInfo(msg); speak(msg);
+    }
+    function resetLadder(silent=false){
+      window.ladderSeq = [];
+      document.querySelectorAll('.step').forEach(s=>{
+        s.classList.remove('border-indigo-500','bg-indigo-50');
+      });
+      renderLadder();
+      if(!silent){ setInfo('Set semula. Pilih turutan baharu.'); }
+    }
+
+    /* ================== Loader / Controls ================== */
+    function loadActivity(num){
+      switch(num){
+        case 1: loadActivity1(); break;
+        case 2: loadActivity2(); break;
+        case 3: loadActivity3(); break;
+      }
+    }
+    function clearActivity(){
+      document.getElementById('activity-content').innerHTML = `
+        <div class="text-center py-20">
+          <div class="text-6xl mb-4">📚</div>
+          <h3 class="text-2xl font-bold text-gray-700 mb-2">Kemahiran Turutan</h3>
+          <p class="text-lg text-gray-500">Pilih aktiviti di bawah untuk mula belajar!</p>
+        </div>`;
+      setInfo('Pilih aktiviti untuk belajar menyusun objek mengikut turutan.');
+    }
+    function nextChallenge(){
+      const arr=[1,2,3]; loadActivity(arr[Math.floor(Math.random()*arr.length)]);
+    }
+
+    // Init
+    clearActivity();
+  </script>
+</body>
+</html>
