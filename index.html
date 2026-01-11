@@ -1,394 +1,443 @@
 <!DOCTYPE html>
-<html lang="ms-MY">
+<html lang="ms-MY" class="overflow-hidden overscroll-none">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Kemahiran Turutan: Susun & Atur</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kemahiran Turutan: Susun & Atur</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-  <style>
-    /* --- UI STYLE (MASTER REFERENCE) --- */
-    body { 
-        font-family: 'Fredoka', sans-serif; 
-        background-color: #f0fdf4; 
-        background-image: radial-gradient(#86efac 2px, transparent 2px); 
-        background-size: 30px 30px; 
-    }
-    
-    .game-card { 
-        background: white; 
-        border: 4px solid #475569; 
-        box-shadow: 8px 8px 0px #00000020; 
-        border-radius: 1.5rem; 
-        min-height: 600px; 
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        overflow: hidden; 
-    }
-    
-    /* Buttons */
-    .btn-3d { 
-        transition: all 0.1s; 
-        border-bottom-width: 6px; 
-        border-color: rgba(0,0,0,0.2); 
-        transform: translateY(0); 
-        cursor: pointer; 
-        display: inline-block; 
-    }
-    .btn-3d:active:not(:disabled) { transform: translateY(4px); border-bottom-width: 2px; box-shadow: none; }
-    
-    /* Drag & Drop Styles */
-    .draggable { cursor: grab; touch-action: none; transition: transform 0.2s; }
-    .draggable:active { cursor: grabbing; opacity: 0.8; transform: scale(1.1) rotate(3deg); }
-    .drop-zone { transition: all 0.2s; border: 4px dashed #cbd5e1; background: #f8fafc; }
-    .drop-zone.drag-over { background: #dbeafe; border-color: #3b82f6; transform: scale(1.02); }
+    <style>
+        /* --- UI STYLE (MASTER REFERENCE) --- */
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #f0fdf4;
+            background-image: radial-gradient(#86efac 2px, transparent 2px);
+            background-size: 30px 30px;
+        }
 
-    /* Animations */
-    .pop-in { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-    @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
-  </style>
+        .game-card {
+            background: white;
+            border: 4px solid #475569;
+            box-shadow: 8px 8px 0px #00000020;
+            border-radius: 1.5rem;
+            /* min-height: 600px; REMOVED */
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Buttons */
+        .btn-3d {
+            transition: all 0.1s;
+            border-bottom-width: 6px;
+            border-color: rgba(0, 0, 0, 0.2);
+            transform: translateY(0);
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .btn-3d:active:not(:disabled) {
+            transform: translateY(4px);
+            border-bottom-width: 2px;
+            box-shadow: none;
+        }
+
+        /* Drag & Drop Styles */
+        .draggable {
+            cursor: grab;
+            touch-action: none;
+            transition: transform 0.2s;
+        }
+
+        .draggable:active {
+            cursor: grabbing;
+            opacity: 0.8;
+            transform: scale(1.1) rotate(3deg);
+        }
+
+        .drop-zone {
+            transition: all 0.2s;
+            border: 4px dashed #cbd5e1;
+            background: #f8fafc;
+        }
+
+        .drop-zone.drag-over {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            transform: scale(1.02);
+        }
+
+        /* Animations */
+        .pop-in {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+    </style>
 </head>
-<body class="min-h-screen text-slate-800 pb-10">
 
-  <div class="fixed top-4 left-0 right-0 z-50 px-4 pointer-events-none">
-    <div class="max-w-4xl mx-auto bg-green-400 border-4 border-green-600 rounded-full px-6 py-3 shadow-xl flex items-center justify-between pointer-events-auto transform hover:scale-[1.01] transition-transform">
-      <div class="flex items-center gap-3">
-        <span class="text-3xl animate-bounce">📏</span>
-        <span id="info-text" class="text-xl font-bold text-green-900 leading-none mt-1">Kemahiran Turutan</span>
-      </div>
-      <button id="speak-btn" onclick="speakInfo()" class="bg-white hover:bg-green-50 text-green-600 border-2 border-green-200 rounded-full p-2 transition-colors shadow-sm">🔊</button>
+<body class="h-screen w-screen overflow-hidden text-slate-800 flex flex-col overscroll-none">
+
+    <div class="flex-none p-4 z-50 pointer-events-none w-full">
+        <div
+            class="max-w-4xl mx-auto bg-green-400 border-4 border-green-600 rounded-full px-6 py-3 shadow-xl flex items-center justify-between pointer-events-auto transform hover:scale-[1.01] transition-transform">
+            <div class="flex items-center gap-3">
+                <span class="text-3xl animate-bounce">📏</span>
+                <span id="info-text" class="text-xl font-bold text-green-900 leading-none mt-1">Kemahiran Turutan</span>
+            </div>
+            <button id="speak-btn" onclick="speakInfo()"
+                class="bg-white hover:bg-green-50 text-green-600 border-2 border-green-200 rounded-full p-2 transition-colors shadow-sm">🔊</button>
+        </div>
     </div>
-  </div>
-  <div class="h-24"></div>
 
-  <div class="max-w-6xl mx-auto p-4">
-    
-    <div class="game-card p-8 mb-8">
-        <div id="activity-content" class="w-full relative z-10 flex flex-col items-center justify-center h-full transition-opacity duration-200">
-            <div class="py-10 text-center">
-                <div class="text-8xl mb-6 animate-pulse">🎯</div>
-                <h2 class="text-5xl font-bold text-emerald-600 mb-4">Mula Belajar</h2>
-                <p class="text-2xl text-slate-500 mb-8 font-semibold">Pilih aktiviti di bawah.</p>
-                <div class="text-4xl animate-bounce">👇</div>
+    <div class="flex-1 w-full max-w-6xl mx-auto p-2 flex flex-col min-h-0">
+
+        <div class="game-card p-2 mb-2 flex-1 w-full">
+            <div id="activity-content"
+                class="w-full relative z-10 flex flex-col items-center justify-center h-full transition-opacity duration-200">
+                <div class="py-10 text-center">
+                    <div class="text-8xl mb-6 animate-pulse">🎯</div>
+                    <h2 class="text-5xl font-bold text-emerald-600 mb-4">Mula Belajar</h2>
+                    <p class="text-2xl text-slate-500 mb-8 font-semibold">Pilih aktiviti di bawah.</p>
+                    <div class="text-4xl animate-bounce">👇</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-none bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg p-2 border-2 border-white">
+            <h3 class="text-lg font-bold text-slate-700 mb-1 text-center">🎮 Pilih Aktiviti</h3>
+
+            <div class="grid grid-cols-3 gap-2 mb-2">
+                <button onclick="loadActivity(1)"
+                    class="btn-3d bg-blue-500 text-white font-bold py-2 px-1 rounded-xl text-sm md:text-base">🔵 Susun
+                    Saiz</button>
+                <button onclick="loadActivity(2)"
+                    class="btn-3d bg-green-500 text-white font-bold py-2 px-1 rounded-xl text-sm md:text-base">🚗 Kereta
+                    Beratur</button>
+                <button onclick="loadActivity(3)"
+                    class="btn-3d bg-purple-500 text-white font-bold py-2 px-1 rounded-xl text-sm md:text-base">🪜
+                    Tangga Nombor</button>
+            </div>
+
+            <div class="flex justify-center gap-4 border-t-2 border-slate-100 pt-2">
+                <button onclick="clearActivity()"
+                    class="btn-3d bg-slate-400 text-white font-bold py-1 px-4 rounded-full text-base">🏠 Menu</button>
+                <button onclick="nextActivity()"
+                    class="btn-3d bg-indigo-500 text-white font-bold py-1 px-6 rounded-full text-lg">Seterusnya
+                    ➡️</button>
             </div>
         </div>
     </div>
 
-    <div class="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg p-6 border-2 border-white">
-      <h3 class="text-2xl font-bold text-slate-700 mb-4 text-center">🎮 Pilih Aktiviti</h3>
-      
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <button onclick="loadActivity(1)" class="btn-3d bg-blue-500 text-white font-bold py-4 px-2 rounded-xl text-lg">🔵 Susun Saiz</button>
-        <button onclick="loadActivity(2)" class="btn-3d bg-green-500 text-white font-bold py-4 px-2 rounded-xl text-lg">🚗 Kereta Beratur</button>
-        <button onclick="loadActivity(3)" class="btn-3d bg-purple-500 text-white font-bold py-4 px-2 rounded-xl text-lg">🪜 Tangga Nombor</button>
-      </div>
+    <script>
+        /* --- STANDARD HELPERS --- */
+        let currentActivity = 0;
+        let ttsEnabled = false;
+        let currentInfo = "Pilih aktiviti untuk mula belajar!";
 
-      <div class="flex justify-center gap-4 border-t-2 border-slate-100 pt-6">
-        <button onclick="clearActivity()" class="btn-3d bg-slate-400 text-white font-bold py-2 px-6 rounded-full text-lg">🏠 Menu</button>
-        <button onclick="nextActivity()" class="btn-3d bg-indigo-500 text-white font-bold py-2 px-8 rounded-full text-xl">Seterusnya ➡️</button>
-      </div>
-    </div>
-  </div>
+        function speak(text) {
+            if (!ttsEnabled || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text); u.lang = 'ms-MY'; u.rate = 0.90; u.pitch = 1.05;
+            const ms = window.speechSynthesis.getVoices().find(v => v.lang === 'ms-MY' || v.lang?.startsWith('ms'));
+            if (ms) u.voice = ms;
+            window.speechSynthesis.speak(u);
+        }
 
-  <script>
-    /* --- STANDARD HELPERS --- */
-    let currentActivity = 0;
-    let ttsEnabled = false;
-    let currentInfo = "Pilih aktiviti untuk mula belajar!";
-    
-    function speak(text) { 
-        if (!ttsEnabled || !('speechSynthesis' in window)) return; 
-        window.speechSynthesis.cancel(); 
-        const u = new SpeechSynthesisUtterance(text); u.lang = 'ms-MY'; u.rate = 0.90; u.pitch = 1.05; 
-        const ms = window.speechSynthesis.getVoices().find(v => v.lang === 'ms-MY' || v.lang?.startsWith('ms')); 
-        if (ms) u.voice = ms; 
-        window.speechSynthesis.speak(u); 
-    }
-    
-    function setInfo(text) { 
-        currentInfo = text; const infoEl = document.getElementById('info-text'); 
-        infoEl.style.opacity = 0; setTimeout(() => { infoEl.textContent = text; infoEl.style.opacity = 1; }, 200); 
-    }
-    
-    function speakInfo() { 
-        if (!ttsEnabled) { ttsEnabled = true; document.getElementById('speak-btn').classList.add('bg-green-100', 'text-green-600'); } 
-        speak(currentInfo); 
-    }
+        function setInfo(text) {
+            currentInfo = text; const infoEl = document.getElementById('info-text');
+            infoEl.style.opacity = 0; setTimeout(() => { infoEl.textContent = text; infoEl.style.opacity = 1; }, 200);
+        }
 
-    function triggerWin() { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); }
+        function speakInfo() {
+            if (!ttsEnabled) { ttsEnabled = true; document.getElementById('speak-btn').classList.add('bg-green-100', 'text-green-600'); }
+            speak(currentInfo);
+        }
 
-    /* --- ROUTER --- */
-    function loadActivity(n) {
-      currentActivity = n;
-      const content = document.getElementById('activity-content');
-      content.style.opacity = 0;
-      setTimeout(() => {
-          if (n === 1) setupAct1(content);
-          else if (n === 2) setupAct2(content);
-          else if (n === 3) setupAct3(content);
-          content.style.opacity = 1; 
-      }, 200);
-    }
+        function triggerWin() { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); }
 
-    function clearActivity() {
-        currentActivity = 0;
-        document.getElementById('activity-content').innerHTML = `<div class="py-10 text-center"><div class="text-8xl mb-6 animate-pulse">🎯</div><h2 class="text-5xl font-bold text-emerald-600 mb-4">Kemahiran Turutan</h2><p class="text-2xl text-slate-500 mb-8 font-semibold">Pilih butang di bawah.</p></div>`;
-        setInfo("Pilih aktiviti di bawah.");
-    }
-    
-    function nextActivity() { let next = currentActivity + 1; if (next > 3) next = 1; loadActivity(next); }
+        /* --- ROUTER --- */
+        function loadActivity(n) {
+            currentActivity = n;
+            const content = document.getElementById('activity-content');
+            content.style.opacity = 0;
+            setTimeout(() => {
+                if (n === 1) setupAct1(content);
+                else if (n === 2) setupAct2(content);
+                else if (n === 3) setupAct3(content);
+                content.style.opacity = 1;
+            }, 200);
+        }
 
-    /* =========================================
-       LOGIK AKTIVITI (DIPORT)
-       ========================================= */
+        function clearActivity() {
+            currentActivity = 0;
+            document.getElementById('activity-content').innerHTML = `<div class="py-10 text-center"><div class="text-8xl mb-6 animate-pulse">🎯</div><h2 class="text-5xl font-bold text-emerald-600 mb-4">Kemahiran Turutan</h2><p class="text-2xl text-slate-500 mb-8 font-semibold">Pilih butang di bawah.</p></div>`;
+            setInfo("Pilih aktiviti di bawah.");
+        }
 
-    /* --- 1. Susun Saiz (Drag & Drop) --- */
-    function setupAct1(content) {
-        setInfo("Seret bulatan dari KECIL ke BESAR.");
-        content.innerHTML = `
+        function nextActivity() { let next = currentActivity + 1; if (next > 3) next = 1; loadActivity(next); }
+
+        /* =========================================
+           LOGIK AKTIVITI (DIPORT)
+           ========================================= */
+
+        /* --- 1. Susun Saiz (Drag & Drop) --- */
+        function setupAct1(content) {
+            setInfo("Seret bulatan dari KECIL ke BESAR.");
+            content.innerHTML = `
             <div class="w-full max-w-4xl text-center">
-                <h3 class="text-3xl font-bold text-blue-600 mb-6">🔵 Susun Saiz</h3>
-                <p class="text-slate-500 mb-6 font-bold">Susun dari Paling Kecil ➜ Paling Besar</p>
+                <h3 class="text-3xl font-bold text-blue-600 mb-4">🔵 Susun Saiz</h3>
+                <p class="text-slate-500 mb-4 font-bold">Susun dari Paling Kecil ➜ Paling Besar</p>
 
-                <div id="pool" class="flex flex-wrap justify-center gap-6 mb-8 min-h-[120px] items-center">
+                <div id="pool" class="flex flex-wrap justify-center gap-4 mb-4 min-h-[100px] items-center">
                     <div id="d1" draggable="true" ondragstart="dragStart(event)" data-size="1"
-                         class="draggable bg-blue-400 text-white rounded-full w-14 h-14 flex items-center justify-center font-bold shadow-lg border-2 border-blue-600">1</div>
+                         class="draggable bg-blue-400 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold shadow-lg border-2 border-blue-600">1</div>
                     <div id="d2" draggable="true" ondragstart="dragStart(event)" data-size="2"
-                         class="draggable bg-blue-500 text-white rounded-full w-20 h-20 flex items-center justify-center font-bold shadow-lg border-2 border-blue-700">2</div>
+                         class="draggable bg-blue-500 text-white rounded-full w-14 h-14 flex items-center justify-center font-bold shadow-lg border-2 border-blue-700">2</div>
                     <div id="d3" draggable="true" ondragstart="dragStart(event)" data-size="3"
-                         class="draggable bg-blue-600 text-white rounded-full w-28 h-28 flex items-center justify-center font-bold shadow-lg border-2 border-blue-800">3</div>
+                         class="draggable bg-blue-600 text-white rounded-full w-20 h-20 flex items-center justify-center font-bold shadow-lg border-2 border-blue-800">3</div>
                     <div id="d4" draggable="true" ondragstart="dragStart(event)" data-size="4"
-                         class="draggable bg-blue-700 text-white rounded-full w-36 h-36 flex items-center justify-center font-bold shadow-lg border-2 border-blue-900">4</div>
+                         class="draggable bg-blue-700 text-white rounded-full w-24 h-24 flex items-center justify-center font-bold shadow-lg border-2 border-blue-900">4</div>
                 </div>
 
-                <div class="grid grid-cols-4 gap-4">
-                    ${[1,2,3,4].map(i => `
-                        <div class="drop-zone rounded-2xl p-2 min-h-[160px] flex flex-col items-center justify-end"
+                <div class="grid grid-cols-4 gap-2">
+                    ${[1, 2, 3, 4].map(i => `
+                        <div class="drop-zone rounded-xl p-1 min-h-[120px] flex flex-col items-center justify-end"
                              ondragover="allowDrop(event)" ondrop="dropSize(event)">
                             <div class="target-slot flex-grow flex items-center justify-center w-full"></div>
-                            <span class="text-sm font-bold text-slate-400 mt-2 uppercase tracking-wide">
-                                ${i===1?'Paling Kecil':i===4?'Paling Besar':i===2?'Kecil':'Besar'}
+                            <span class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wide">
+                                ${i === 1 ? 'Paling Kecil' : i === 4 ? 'Paling Besar' : i === 2 ? 'Kecil' : 'Besar'}
                             </span>
                         </div>
                     `).join('')}
                 </div>
             </div>
         `;
-    }
-    
-    window.dragStart = function(ev) { ev.dataTransfer.setData('text', ev.target.id); }
-    window.allowDrop = function(ev) { ev.preventDefault(); ev.target.closest('.drop-zone').classList.add('drag-over'); }
-    
-    window.dropSize = function(ev) {
-        ev.preventDefault();
-        const zone = ev.target.closest('.drop-zone');
-        zone.classList.remove('drag-over');
-        
-        const slot = zone.querySelector('.target-slot');
-        // Clear slot first
-        if(slot.children.length > 0) return; 
+        }
 
-        const id = ev.dataTransfer.getData('text');
-        const item = document.getElementById(id);
-        if(!item) return;
-        
-        slot.appendChild(item);
-        readSizeOrder();
-    }
+        window.dragStart = function (ev) { ev.dataTransfer.setData('text', ev.target.id); }
+        window.allowDrop = function (ev) { ev.preventDefault(); ev.target.closest('.drop-zone').classList.add('drag-over'); }
 
-    function readSizeOrder() {
-        const slots = document.querySelectorAll('.drop-zone .target-slot');
-        const items = Array.from(slots).map(s => s.children.length > 0 ? s.children[0].dataset.size : null);
-        
-        const filled = items.filter(x => x !== null);
-        if(filled.length === 0) return;
+        window.dropSize = function (ev) {
+            ev.preventDefault();
+            const zone = ev.target.closest('.drop-zone');
+            zone.classList.remove('drag-over');
 
-        const labels = {1:'paling kecil', 2:'kecil', 3:'besar', 4:'paling besar'};
-        const msg = `Turutan: ${filled.map(s => labels[s]).join(' ke ')}.`;
-        
-        setInfo(msg); speak(msg);
+            const slot = zone.querySelector('.target-slot');
+            // Clear slot first
+            if (slot.children.length > 0) return;
 
-        // Check Win
-        if(filled.length === 4) {
-            if(items[0]==='1' && items[1]==='2' && items[2]==='3' && items[3]==='4') {
-                setTimeout(() => { triggerWin(); speak("Tahniah! Susunan betul."); }, 500);
+            const id = ev.dataTransfer.getData('text');
+            const item = document.getElementById(id);
+            if (!item) return;
+
+            slot.appendChild(item);
+            readSizeOrder();
+        }
+
+        function readSizeOrder() {
+            const slots = document.querySelectorAll('.drop-zone .target-slot');
+            const items = Array.from(slots).map(s => s.children.length > 0 ? s.children[0].dataset.size : null);
+
+            const filled = items.filter(x => x !== null);
+            if (filled.length === 0) return;
+
+            const labels = { 1: 'paling kecil', 2: 'kecil', 3: 'besar', 4: 'paling besar' };
+            const msg = `Turutan: ${filled.map(s => labels[s]).join(' ke ')}.`;
+
+            setInfo(msg); speak(msg);
+
+            // Check Win
+            if (filled.length === 4) {
+                if (items[0] === '1' && items[1] === '2' && items[2] === '3' && items[3] === '4') {
+                    setTimeout(() => { triggerWin(); speak("Tahniah! Susunan betul."); }, 500);
+                }
             }
         }
-    }
 
-    /* --- 2. Kereta Beratur (Panjang) --- */
-    function setupAct2(content) {
-        setInfo("Seret kereta: PENDEK ke PANJANG.");
-        content.innerHTML = `
+        /* --- 2. Kereta Beratur (Panjang) --- */
+        function setupAct2(content) {
+            setInfo("Seret kereta: PENDEK ke PANJANG.");
+            content.innerHTML = `
             <div class="w-full max-w-5xl text-center">
-                <h3 class="text-3xl font-bold text-green-600 mb-6">🚗 Kereta Beratur</h3>
+                <h3 class="text-3xl font-bold text-green-600 mb-4">🚗 Kereta Beratur</h3>
                 
-                <div id="car-pool" class="flex flex-wrap justify-center items-end gap-3 mb-10 min-h-[100px]">
+                <div id="car-pool" class="flex flex-wrap justify-center items-end gap-2 mb-6 min-h-[80px]">
                      ${[
-                        {w:'80px', c:'bg-red-500', t:'Sangat Pendek', v:1},
-                        {w:'110px', c:'bg-orange-500', t:'Pendek', v:2},
-                        {w:'140px', c:'bg-yellow-500', t:'Sederhana', v:3},
-                        {w:'170px', c:'bg-emerald-500', t:'Panjang', v:4},
-                        {w:'200px', c:'bg-blue-600', t:'Sangat Panjang', v:5}
-                      ].map(k => `
+                    { w: '60px', c: 'bg-red-500', t: 'Sangat Pendek', v: 1 },
+                    { w: '80px', c: 'bg-orange-500', t: 'Pendek', v: 2 },
+                    { w: '100px', c: 'bg-yellow-500', t: 'Sederhana', v: 3 },
+                    { w: '120px', c: 'bg-emerald-500', t: 'Panjang', v: 4 },
+                    { w: '140px', c: 'bg-blue-600', t: 'Sangat Panjang', v: 5 }
+                ].map(k => `
                         <div id="car-${k.v}" draggable="true" ondragstart="dragStart(event)" data-label="${k.t}" data-val="${k.v}"
-                             class="draggable ${k.c} text-white rounded-2xl h-16 shadow-lg border-b-4 border-black/20 flex items-center justify-center gap-2"
+                             class="draggable ${k.c} text-white rounded-xl h-12 shadow-lg border-b-4 border-black/20 flex items-center justify-center gap-1"
                              style="width:${k.w}">
-                             <span class="text-2xl">🚗</span>
+                             <span class="text-xl">🚗</span>
                         </div>
                       `).join('')}
                 </div>
 
-                <div class="bg-slate-200 rounded-3xl p-6 border-4 border-slate-300">
-                    <div class="flex justify-between text-slate-500 font-bold mb-2 px-4">
+                <div class="bg-slate-200 rounded-2xl p-4 border-4 border-slate-300">
+                    <div class="flex justify-between text-slate-500 font-bold mb-1 px-2 text-sm">
                         <span>Mula (Pendek)</span>
                         <span>Akhir (Panjang)</span>
                     </div>
-                    <div id="lane" class="grid grid-cols-5 gap-2">
-                        ${[1,2,3,4,5].map(i => `
-                            <div class="drop-zone bg-white/50 rounded-xl h-24 flex items-center justify-center border-2 border-dashed border-slate-400"
+                    <div id="lane" class="grid grid-cols-5 gap-1">
+                        ${[1, 2, 3, 4, 5].map(i => `
+                            <div class="drop-zone bg-white/50 rounded-lg h-16 flex items-center justify-center border-2 border-dashed border-slate-400"
                                  ondragover="allowDrop(event)" ondrop="dropCar(event)">
                             </div>
                         `).join('')}
                     </div>
                 </div>
                 
-                <div class="mt-6">
-                    <button onclick="setupAct2(document.getElementById('activity-content'))" class="btn-3d bg-slate-400 text-white px-6 py-2 rounded-lg font-bold">Reset 🔄</button>
+                <div class="mt-4">
+                    <button onclick="setupAct2(document.getElementById('activity-content'))" class="btn-3d bg-slate-400 text-white px-4 py-1 rounded-lg font-bold text-sm">Reset 🔄</button>
                 </div>
             </div>
         `;
-    }
-    
-    window.dropCar = function(ev) {
-        ev.preventDefault();
-        const zone = ev.target.closest('.drop-zone');
-        zone.classList.remove('drag-over');
-        if(zone.children.length > 0) return;
+        }
 
-        const id = ev.dataTransfer.getData('text');
-        const item = document.getElementById(id);
-        if(!item) return;
-        
-        zone.appendChild(item);
-        
-        // Read sequence
-        const cars = document.querySelectorAll('#lane .drop-zone');
-        const labels = [];
-        let correctCount = 0;
-        
-        cars.forEach((z, idx) => {
-            if(z.children.length > 0) {
-                const car = z.children[0];
-                labels.push(car.dataset.label);
-                if(parseInt(car.dataset.val) === idx + 1) correctCount++;
+        window.dropCar = function (ev) {
+            ev.preventDefault();
+            const zone = ev.target.closest('.drop-zone');
+            zone.classList.remove('drag-over');
+            if (zone.children.length > 0) return;
+
+            const id = ev.dataTransfer.getData('text');
+            const item = document.getElementById(id);
+            if (!item) return;
+
+            zone.appendChild(item);
+
+            // Read sequence
+            const cars = document.querySelectorAll('#lane .drop-zone');
+            const labels = [];
+            let correctCount = 0;
+
+            cars.forEach((z, idx) => {
+                if (z.children.length > 0) {
+                    const car = z.children[0];
+                    labels.push(car.dataset.label);
+                    if (parseInt(car.dataset.val) === idx + 1) correctCount++;
+                }
+            });
+
+            if (labels.length > 0) {
+                const msg = `Turutan: ${labels.join(', ')}.`;
+                setInfo(msg); speak(msg);
             }
-        });
 
-        if(labels.length > 0) {
-            const msg = `Turutan: ${labels.join(', ')}.`;
-            setInfo(msg); speak(msg);
+            if (correctCount === 5) {
+                setTimeout(() => { triggerWin(); speak("Hebat! Kereta tersusun rapi."); }, 500);
+            }
         }
 
-        if(correctCount === 5) {
-             setTimeout(() => { triggerWin(); speak("Hebat! Kereta tersusun rapi."); }, 500);
-        }
-    }
+        /* --- 3. Tangga Nombor (Logic) --- */
+        let ladderMode = 'up';
+        let ladderSeq = [];
 
-    /* --- 3. Tangga Nombor (Logic) --- */
-    let ladderMode = 'up';
-    let ladderSeq = [];
+        function setupAct3(content) {
+            ladderMode = 'up'; ladderSeq = [];
+            setInfo("Pilih mod, kemudian klik tangga.");
 
-    function setupAct3(content) {
-        ladderMode = 'up'; ladderSeq = [];
-        setInfo("Pilih mod, kemudian klik tangga.");
-
-        content.innerHTML = `
+            content.innerHTML = `
             <div class="w-full max-w-4xl text-center">
-                <h3 class="text-3xl font-bold text-purple-600 mb-6">🪜 Tangga Nombor</h3>
+                <h3 class="text-3xl font-bold text-purple-600 mb-4">🪜 Tangga Nombor</h3>
                 
-                <div class="flex justify-center gap-4 mb-8">
-                    <button onclick="setLadderMode('up')" id="btn-up" class="btn-3d bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold border-emerald-700">
+                <div class="flex justify-center gap-2 mb-4">
+                    <button onclick="setLadderMode('up')" id="btn-up" class="btn-3d bg-emerald-500 text-white px-4 py-2 rounded-xl font-bold border-emerald-700 text-sm">
                         Naik (1 ➜ 5) 📈
                     </button>
-                    <button onclick="setLadderMode('down')" id="btn-down" class="btn-3d bg-slate-200 text-slate-600 px-6 py-3 rounded-xl font-bold border-slate-300">
+                    <button onclick="setLadderMode('down')" id="btn-down" class="btn-3d bg-slate-200 text-slate-600 px-4 py-2 rounded-xl font-bold border-slate-300 text-sm">
                         Turun (5 ➜ 1) 📉
                     </button>
                 </div>
 
-                <div class="flex justify-center items-end gap-2 h-64 mb-6 px-4">
-                    ${[1,2,3,4,5].map(n => `
+                <div class="flex justify-center items-end gap-1 h-48 mb-4 px-2">
+                    ${[1, 2, 3, 4, 5].map(n => `
                         <button onclick="clickStep(this, ${n})" id="step-${n}"
-                            class="step-btn btn-3d bg-white border-indigo-200 text-indigo-600 w-full rounded-t-xl font-black text-3xl shadow-sm hover:bg-indigo-50 flex items-end justify-center pb-4 transition-all"
-                            style="height: ${n * 20}%">
+                            class="step-btn btn-3d bg-white border-indigo-200 text-indigo-600 w-full rounded-t-xl font-black text-2xl shadow-sm hover:bg-indigo-50 flex items-end justify-center pb-2 transition-all"
+                            style="height: ${n * 18}%">
                             ${n}
                         </button>
                     `).join('')}
                 </div>
                 
-                <div class="bg-indigo-50 p-4 rounded-xl border-2 border-indigo-100 min-h-[60px]">
-                    <span id="seq-display" class="text-xl font-bold text-indigo-800">...</span>
+                <div class="bg-indigo-50 p-2 rounded-xl border-2 border-indigo-100 min-h-[40px]">
+                    <span id="seq-display" class="text-lg font-bold text-indigo-800">...</span>
                 </div>
                 
-                <button onclick="setupAct3(document.getElementById('activity-content'))" class="mt-4 text-slate-400 font-bold hover:text-slate-600">Mula Semula</button>
+                <button onclick="setupAct3(document.getElementById('activity-content'))" class="mt-2 text-slate-400 font-bold hover:text-slate-600 text-sm">Mula Semula</button>
             </div>
         `;
-    }
-
-    window.setLadderMode = function(mode) {
-        ladderMode = mode;
-        ladderSeq = [];
-        document.getElementById('seq-display').textContent = '...';
-        
-        // UI Toggle
-        const btnUp = document.getElementById('btn-up');
-        const btnDown = document.getElementById('btn-down');
-        
-        if(mode === 'up') {
-            btnUp.className = "btn-3d bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold border-emerald-700";
-            btnDown.className = "btn-3d bg-slate-200 text-slate-600 px-6 py-3 rounded-xl font-bold border-slate-300";
-            speak("Mod Naik. Tekan 1, 2, 3, 4, 5.");
-        } else {
-            btnDown.className = "btn-3d bg-rose-500 text-white px-6 py-3 rounded-xl font-bold border-rose-700";
-            btnUp.className = "btn-3d bg-slate-200 text-slate-600 px-6 py-3 rounded-xl font-bold border-slate-300";
-            speak("Mod Turun. Tekan 5, 4, 3, 2, 1.");
         }
-        
-        // Reset Steps UI
-        document.querySelectorAll('.step-btn').forEach(b => {
-            b.classList.remove('bg-indigo-500', 'text-white', 'border-indigo-700');
-            b.classList.add('bg-white', 'text-indigo-600');
-        });
-    }
 
-    window.clickStep = function(btn, n) {
-        // Validation logic
-        const expected = ladderMode === 'up' ? (ladderSeq.length + 1) : (5 - ladderSeq.length);
-        
-        if(n === expected) {
-            ladderSeq.push(n);
-            // Highlight active
-            btn.classList.remove('bg-white', 'text-indigo-600');
-            btn.classList.add('bg-indigo-500', 'text-white', 'border-indigo-700');
-            
-            speak(n);
-            document.getElementById('seq-display').textContent = ladderSeq.join(' ➜ ');
+        window.setLadderMode = function (mode) {
+            ladderMode = mode;
+            ladderSeq = [];
+            document.getElementById('seq-display').textContent = '...';
 
-            if(ladderSeq.length === 5) {
-                setTimeout(() => { triggerWin(); speak("Syabas! Tangga berjaya disiapkan."); }, 500);
+            // UI Toggle
+            const btnUp = document.getElementById('btn-up');
+            const btnDown = document.getElementById('btn-down');
+
+            if (mode === 'up') {
+                btnUp.className = "btn-3d bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold border-emerald-700";
+                btnDown.className = "btn-3d bg-slate-200 text-slate-600 px-6 py-3 rounded-xl font-bold border-slate-300";
+                speak("Mod Naik. Tekan 1, 2, 3, 4, 5.");
+            } else {
+                btnDown.className = "btn-3d bg-rose-500 text-white px-6 py-3 rounded-xl font-bold border-rose-700";
+                btnUp.className = "btn-3d bg-slate-200 text-slate-600 px-6 py-3 rounded-xl font-bold border-slate-300";
+                speak("Mod Turun. Tekan 5, 4, 3, 2, 1.");
             }
-        } else {
-            speak("Salah. Ikut turutan.");
-            btn.classList.add('animate-bounce');
-            setTimeout(() => btn.classList.remove('animate-bounce'), 500);
-        }
-    }
 
-  </script>
+            // Reset Steps UI
+            document.querySelectorAll('.step-btn').forEach(b => {
+                b.classList.remove('bg-indigo-500', 'text-white', 'border-indigo-700');
+                b.classList.add('bg-white', 'text-indigo-600');
+            });
+        }
+
+        window.clickStep = function (btn, n) {
+            // Validation logic
+            const expected = ladderMode === 'up' ? (ladderSeq.length + 1) : (5 - ladderSeq.length);
+
+            if (n === expected) {
+                ladderSeq.push(n);
+                // Highlight active
+                btn.classList.remove('bg-white', 'text-indigo-600');
+                btn.classList.add('bg-indigo-500', 'text-white', 'border-indigo-700');
+
+                speak(n);
+                document.getElementById('seq-display').textContent = ladderSeq.join(' ➜ ');
+
+                if (ladderSeq.length === 5) {
+                    setTimeout(() => { triggerWin(); speak("Syabas! Tangga berjaya disiapkan."); }, 500);
+                }
+            } else {
+                speak("Salah. Ikut turutan.");
+                btn.classList.add('animate-bounce');
+                setTimeout(() => btn.classList.remove('animate-bounce'), 500);
+            }
+        }
+
+    </script>
 </body>
+
 </html>
